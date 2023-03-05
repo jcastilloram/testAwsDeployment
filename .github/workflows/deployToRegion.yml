@@ -147,13 +147,23 @@ jobs:
           cd ./appsync-with-postgraphile
           cdk bootstrap
         
+      - name: Get proxy ARN
+        id: get_proxy
+        run: |
+          aws rds describe-db-proxies --db-proxy-name ${{ env.RDSPROXYNAME }} >> proxy.json
+          cat proxy.json
+          content="$(cat proxy.json)"
+          # the following lines are only required for multi line json
+          content="${content//'%'/'%25'}"
+          content="${content//$'\n'/'%0A'}"
+          content="${content//$'\r'/'%0D'}"
+          # end of optional handling for multi line json
+          echo "::set-output name=proxyJson::$content"
+
       - name: Deploy AppSync
         run: |
           cd ./appsync-with-postgraphile
-          aws rds describe-db-proxies --db-proxy-name ${{ env.RDSPROXYNAME }} >> proxy.json
-          cat proxy.json
-          cat ${{ fromJson(proxy.json).DBProxies[0].DBProxyArn }}
-          cdk deploy --require-approval never -c vpcId=${{ env.VPCID }} --parameters sgId=${{ env.SGID }} --parameters dbProxyArn=${{ fromJson(proxy.json).DBProxies[0].DBProxyArn }} --parameters dbProxyName=${{ env.RDSPROXYNAME }} --parameters dbProxyEndpoint=${{ env.ENDPOINT }} --parameters userName=${{ env.USERNAME }} --parameters database=${{ env.DATABASE }} --parameters schemas=${{ env.SCHEMAS }} -O output.json
+          cdk deploy --require-approval never -c vpcId=${{ env.VPCID }} --parameters sgId=${{ env.SGID }} --parameters dbProxyArn=${{ fromJson(steps.get_proxy.outputs.proxyJson).DBProxies[0].DBProxyArn }} --parameters dbProxyName=${{ env.RDSPROXYNAME }} --parameters dbProxyEndpoint=${{ env.ENDPOINT }} --parameters userName=${{ env.USERNAME }} --parameters database=${{ env.DATABASE }} --parameters schemas=${{ env.SCHEMAS }} -O output.json
           
         env:
           RDSPROXYNAME: ${{ needs.vpc-rds-deployment.outputs.RDSPROXYNAME }}
