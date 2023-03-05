@@ -48,7 +48,12 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      DEPLOYMENT: ${{ steps.deployment_output.outputs.outputJson }}
+      # DEPLOYMENT: ${{ steps.deployment_output.outputs.outputJson }}
+      RDSPROXYNAME: ${{ fromJson(steps.deployment_output.outputs.outputJson).PgRdsStack.rdsProxyName }}
+      SGID: ${{ fromJson(steps.deployment_output.outputs.outputJson).PgRdsStack.LambdaSecurityGroupId }}
+      VPCID: ${{ fromJson(steps.deployment_output.outputs.outputJson).PgVpcStack.vpcID }}
+      DBPROXYARN: ${{ fromJson(steps.deployment_output.outputs.outputJson).PgRdsStack.rdsProxyARN }}
+      ENDPOINT: ${{ fromJson(steps.deployment_output.outputs.outputJson).PgRdsStack.rdsProxyEndpoint }}
 
     steps:
       - name: Checkout
@@ -84,7 +89,6 @@ jobs:
         run: |
           cd ./vpc-with-pg
           cdk deploy --require-approval never --all -O output.json
-          cat output.json
           content="$(cat output.json)"
           # the following lines are only required for multi line json
           content="${content//'%'/'%25'}"
@@ -149,14 +153,14 @@ jobs:
           cdk deploy --require-approval never -c vpcId=${{ env.VPCID }} --parameters sgId=${{ env.SGID }} --parameters dbProxyArn=${{ env.DBPROXYARN }} --parameters dbProxyName=${{ env.RDSPROXYNAME }} --parameters dbProxyEndpoint=${{ env.ENDPOINT }} --parameters userName=${{ env.USERNAME }} --parameters database=${{ env.DATABASE }} --parameters schemas=${{ env.SCHEMAS }} -O output.json
           
         env:
-          RDSPROXYNAME: ${{ fromJson(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgRdsStack.rdsProxyName }}
-          SGID: ${{ fromJson(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgRdsStack.LambdaSecurityGroupId }}
+          RDSPROXYNAME: ${{ needs.vpc-rds-deployment.outputs.RDSPROXYNAME }}
+          SGID: ${{ needs.vpc-rds-deployment.outputs.SGID }}
           USERNAME: 'lambda_runner'
           DATABASE: 'forum_demo_with_appsync'
           SCHEMAS: 'forum_example'
-          VPCID: ${{ fromJson(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgVpcStack.vpcID }}
-          DBPROXYARN: ${{ fromJson(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgRdsStack.rdsProxyARN }}
-          ENDPOINT: ${{ fromJson(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgRdsStack.rdsProxyEndpoint }}
+          VPCID: ${{ needs.vpc-rds-deployment.outputs.VPCID }}
+          DBPROXYARN: ${{ needs.vpc-rds-deployment.outputs.DBPROXYARN }}
+          ENDPOINT: ${{ needs.vpc-rds-deployment.outputs.ENDPOINT }}
 
       # - name: Commit repo with output file
       #   env: 
