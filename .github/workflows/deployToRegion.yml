@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
 
     outputs:
-      DEPLOYMENT: ${{ fromJson(steps.deployment_output.outputs.outputJson) }}
+      DEPLOYMENT: ${{ steps.deployment_output.outputs.outputJson }}
 
     steps:
       - name: Checkout
