@@ -97,16 +97,16 @@ jobs:
           cd ./vpc-with-pg
           npm run load
 
-      - name: Commit repo with output file
-        env: 
-          CI_COMMIT_MESSAGE: Add output file after deploying VPS and RDS
-          CI_COMMIT_AUTHOR: ${{ github.actor }}
-        run: |
-          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
-          git config --global user.email "username@users.noreply.github.com"
-          git add .
-          git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
-          git push https://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@github.com/jcastilloram/testAwsDeployment.git
+      # - name: Commit repo with output file
+      #   env: 
+      #     CI_COMMIT_MESSAGE: Add output file after deploying VPS and RDS
+      #     CI_COMMIT_AUTHOR: ${{ github.actor }}
+      #   run: |
+      #     git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
+      #     git config --global user.email "username@users.noreply.github.com"
+      #     git add .
+      #     git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
+      #     git push https://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@github.com/jcastilloram/testAwsDeployment.git
 
   appsync-deployment:
     name: AppSync Deployment
@@ -157,16 +157,16 @@ jobs:
           DBPROXYARN: ${{ needs.vpc-rds-deployment.outputs.DEPLOYMENT.PgRdsStack.rdsProxyARN }}
           ENDPOINT: ${{ needs.vpc-rds-deployment.outputs.DEPLOYMENT.PgRdsStack.rdsProxyEndpoint }}
 
-      - name: Commit repo with output file
-        env: 
-          CI_COMMIT_MESSAGE: Add output file after deploying AppSync
-          CI_COMMIT_AUTHOR: ${{ github.actor }}
-        run: |
-          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
-          git config --global user.email "username@users.noreply.github.com"
-          git add .
-          git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
-          git push https://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@github.com/jcastilloram/testAwsDeployment.git
+      # - name: Commit repo with output file
+      #   env: 
+      #     CI_COMMIT_MESSAGE: Add output file after deploying AppSync
+      #     CI_COMMIT_AUTHOR: ${{ github.actor }}
+      #   run: |
+      #     git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
+      #     git config --global user.email "username@users.noreply.github.com"
+      #     git add .
+      #     git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
+      #     git push https://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@github.com/jcastilloram/testAwsDeployment.git
 
 # ***************************************************************************************************************
 # Notifications section
