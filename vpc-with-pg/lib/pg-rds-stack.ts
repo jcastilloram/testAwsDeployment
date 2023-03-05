@@ -48,9 +48,9 @@ export class PgRdsStack extends Stack {
     })
 
     // output credentials
-    new CfnOutput(this, 'Secret Name', { value: this.postgresSecret.secretName })
-    new CfnOutput(this, 'Secret ARN', { value: this.postgresSecret.secretArn })
-    new CfnOutput(this, 'Secret Full ARN', { value: this.postgresSecret.secretFullArn || '' })
+    new CfnOutput(this, 'secretName', { value: this.postgresSecret.secretName })
+    new CfnOutput(this, 'secretARN', { value: this.postgresSecret.secretArn })
+    new CfnOutput(this, 'secretFullARN', { value: this.postgresSecret.secretFullArn || '' })
 
     // next, create a new string parameter to be use
     new StringParameter(this, 'DBCredentialsArn', {
@@ -106,10 +106,10 @@ export class PgRdsStack extends Stack {
     targetGroup.addPropertyOverride('TargetGroupName', 'default')
 
     // output the endpoint
-    new CfnOutput(this, 'RDS Endpoint', { value: this.rdsInstance.dbInstanceEndpointAddress })
-    new CfnOutput(this, 'RDS Proxy Endpoint', { value: this.rdsProxy.endpoint })
-    new CfnOutput(this, 'RDS Proxy ARN', { value: this.rdsProxy.dbProxyArn })
-    new CfnOutput(this, 'RDS Proxy Name', { value: this.rdsProxy.dbProxyName })
-    new CfnOutput(this, 'Lambda Security Group Id', { value: lambdaToRDSProxyGroup.securityGroupId })
+    new CfnOutput(this, 'rdsEndpoint', { value: this.rdsInstance.dbInstanceEndpointAddress })
+    new CfnOutput(this, 'rdsProxyEndpoint', { value: this.rdsProxy.endpoint })
+    new CfnOutput(this, 'rdsProxyARN', { value: this.rdsProxy.dbProxyArn })
+    new CfnOutput(this, 'rdsProxyName', { value: this.rdsProxy.dbProxyName })
+    new CfnOutput(this, 'LambdaSecurityGroupId', { value: lambdaToRDSProxyGroup.securityGroupId })
   }
 }

@@ -1,0 +1,200 @@
+name: Deploy dev Region
+run-name: ${{ github.actor }} is deploying a development environment in ${{ inputs.REGION }}.
+
+on:
+  workflow_dispatch:
+    inputs:
+      REGION:
+        description: 'The region to deploy the resources.'
+        required: true
+        default: 'us-east-1'
+        type: choice
+        options:
+        - us-east-1
+        - us-west-1
+      # RDSPROXYNAME:
+      #   description: 'The RDS proxy name'
+      #   required: true
+      #   default: ${{ secrets.RDSDEFAULTPROXY }}
+      #   type: string
+      # SECURITYGROUPID:
+      #   description: 'The security group to assign the Lambda Function'
+      #   required: true
+      #   default: ${{ secrets.DEFAULTSECURITYGROUPID }}
+      #   type: string
+      # USERNAME:
+      #   description: 'Username/role that will be used to execute SQL queries on database'
+      #   required: true
+      #   default: ${{ secrets.AWSUSER }}
+      #   type: string
+      # DATABASE:
+      #   description: 'Database to connect to'
+      #   required: true
+      #   default: ${{ secrets.AWSDEFAULTDB }}
+      #   type: string
+      # SCHEMAS:
+      #   description: 'Schemas to access. '
+      #   required: true
+      #   default: ${{ secrets.DEFAULTSCHEMA }}
+      #   type: string
+
+# To do:
+# - Add DB creation
+# - Save output.js somewhere in repo
+# - missing update.js from script folder
+jobs:
+  vpc-rds-deployment:
+    name: VPC and RDS Deployment
+    runs-on: ubuntu-latest
+
+    outputs:
+      DEPLOYMENT: ${{ fromJson(steps.deployment_output.outputs.outputJson) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '16.x'
+
+      - name: Install all dependencies
+        run: |
+          cd ./vpc-with-pg
+          npm install
+          sudo npm install -g aws-cdk
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.REGION }}
+
+      - name: Bootstrap the CDK to the region
+        run: |
+          cd ./vpc-with-pg
+          cdk bootstrap
+
+      - name: Deploy VPC and RDS without approval prompt
+        id: deployment_output
+        run: |
+          cd ./vpc-with-pg
+          cdk deploy -- --require-approval never --all -O output.json
+          content=`cat output.json`
+          # the following lines are only required for multi line json
+          content="${content//'%'/'%25'}"
+          content="${content//$'\n'/'%0A'}"
+          content="${content//$'\r'/'%0D'}"
+          # end of optional handling for multi line json
+          echo "::set-output name=outputJson::$content"
+
+      - name: Load Database
+        run: |
+          cd ./vpc-with-pg
+          npm run load
+
+      - name: Commit repo with output file
+        env: 
+          CI_COMMIT_MESSAGE: Add output file after deploying VPS and RDS
+          CI_COMMIT_AUTHOR: ${{ github.actor }}
+        run: |
+          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
+          git config --global user.email "username@users.noreply.github.com"
+          git commit -a -m "${{ env.CI_COMMIT_MESSAGE }}"
+          git push
+
+  appsync-deployment:
+    name: AppSync Deployment
+    runs-on: ubuntu-latest
+    needs: vpc-rds-deployment
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+        
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '16.x'
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ inputs.REGION }}
+          
+      - name: Install all dependencies
+        run: |
+          cd ./appsync-with-postgraphile
+          npm install
+          sudo npm install -g aws-cdk
+
+      - name: Bootstrap CDK
+        run: |
+          cd ./appsync-with-postgraphile
+          cdk bootstrap
+        
+      - name: Deploy AppSync
+        run: |
+          cd ./appsync-with-postgraphile
+          cdk deploy -- -c vpcId=${{ env.VPCID }} --parameters sgId=${{ env.SGID }} --parameters dbProxyArn=${{ env.DBPROXYARN }} --parameters dbProxyName=${{ env.RDSPROXYNAME }} --parameters dbProxyEndpoint=${{ env.ENDPOINT }} --parameters userName=${{ env.USERNAME }} --parameters database=${{ env.DATABASE }} --parameters schemas=${{ env.SCHEMAS }} -O output.json
+          
+        env:
+          RDSPROXYNAME: ${{ needs.vpc-rds-deployment.outputs.DEPLOYMENT.PgRdsStack.rdsProxyName }}
+          SGID: ${{ needs.vpc-rds-deployment.outputs.DEPLOYMENT.PgRdsStack.LambdaSecurityGroupId }}
+          USERNAME: 'lambda_runner'
+          DATABASE: 'forum_demo_with_appsync'
+          SCHEMAS: 'forum_example'
+          VPCID: ${{ needs.vpc-rds-deployment.outputs.DEPLOYMENT.PgVpcStack.VPCID }}
+          DBPROXYARN: ${{ needs.vpc-rds-deployment.outputs.DEPLOYMENT.PgRdsStack.rdsProxyARN }}
+          ENDPOINT: ${{ needs.vpc-rds-deployment.outputs.DEPLOYMENT.PgRdsStack.rdsProxyEndpoint }}
+
+      - name: Commit repo with output file
+        env: 
+          CI_COMMIT_MESSAGE: Add output file after deploying AppSync
+          CI_COMMIT_AUTHOR: ${{ github.actor }}
+        run: |
+          git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
+          git config --global user.email "username@users.noreply.github.com"
+          git commit -a -m "${{ env.CI_COMMIT_MESSAGE }}"
+          git push
+
+# ***************************************************************************************************************
+# Notifications section
+  on_trigger:
+    name: Notify to teams on workflow trigger
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Checkout dev branch
+        uses: actions/checkout@master
+        with:
+          ref: dev
+      - name: Microsoft Teams Notification
+        uses: skitionek/notify-microsoft-teams@master
+        with:
+          webhook_url: ${{ secrets.MSTEAMS_WEBHOOK }}
+          needs: ${{ toJson(needs) }}
+          job: ${{ toJson(job) }}
+          steps: ${{ toJson(steps) }}
+
+  on_complete:
+    name: Notify to teams on workflow completion
+    runs-on: ubuntu-latest
+    needs: [vpc-rds-deployment, appsync-deployment]
+    if: always()
+    steps:
+      - name: Checkout dev branch
+        uses: actions/checkout@master
+        with:
+          ref: dev
+      - name: Microsoft Teams Notification
+        uses: skitionek/notify-microsoft-teams@master
+        with:
+          webhook_url: ${{ secrets.MSTEAMS_WEBHOOK }}
+          needs: ${{ toJson(needs) }}
+          job: ${{ toJson(job) }}
+          steps: ${{ toJson(steps) }}

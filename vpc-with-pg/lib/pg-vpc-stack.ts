@@ -29,6 +29,6 @@ export class PgVpcStack extends Stack {
         },
       ],
     })
-    new CfnOutput(this, 'VPC ID', { value: this.vpc.vpcId })
+    new CfnOutput(this, 'vpcID', { value: this.vpc.vpcId })
   }
 }

@@ -5,6 +5,7 @@
     "appsync-with-postgraphile-rds": "bin/appsync-with-postgraphile-rds.js"
   },
   "scripts": {
+    "postinstall": "(npm install); (cd lib/layers/pg-as-datasource-layer/nodejs/ && npm install)",
     "build": "tsc",
     "watch": "tsc -w",
     "cdk": "cdk",
