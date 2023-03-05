@@ -148,7 +148,7 @@ jobs:
           USERNAME: 'lambda_runner'
           DATABASE: 'forum_demo_with_appsync'
           SCHEMAS: 'forum_example'
-          VPCID: ${{ needs.vpc-rds-deployment.outputs.DEPLOYMENT.PgVpcStack.VPCID }}
+          VPCID: ${{ needs.vpc-rds-deployment.outputs.DEPLOYMENT.PgVpcStack.vpcID }}
           DBPROXYARN: ${{ needs.vpc-rds-deployment.outputs.DEPLOYMENT.PgRdsStack.rdsProxyARN }}
           ENDPOINT: ${{ needs.vpc-rds-deployment.outputs.DEPLOYMENT.PgRdsStack.rdsProxyEndpoint }}
 
