@@ -104,7 +104,8 @@ jobs:
         run: |
           git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
           git config --global user.email "username@users.noreply.github.com"
-          git commit -a -m "${{ env.CI_COMMIT_MESSAGE }}"
+          git add .
+          git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
           git push
 
   appsync-deployment:
@@ -163,7 +164,8 @@ jobs:
         run: |
           git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
           git config --global user.email "username@users.noreply.github.com"
-          git commit -a -m "${{ env.CI_COMMIT_MESSAGE }}"
+          git add .
+          git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
           git push
 
 # ***************************************************************************************************************
@@ -173,10 +175,9 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     steps:
-      - name: Checkout dev branch
+      - name: Checkout
         uses: actions/checkout@master
-        with:
-          ref: dev
+
       - name: Microsoft Teams Notification
         uses: skitionek/notify-microsoft-teams@master
         with:
@@ -191,10 +192,9 @@ jobs:
     needs: [vpc-rds-deployment, appsync-deployment]
     if: always()
     steps:
-      - name: Checkout dev branch
+      - name: Checkout
         uses: actions/checkout@master
-        with:
-          ref: dev
+
       - name: Microsoft Teams Notification
         uses: skitionek/notify-microsoft-teams@master
         with:
