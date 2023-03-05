@@ -84,6 +84,7 @@ jobs:
         run: |
           cd ./vpc-with-pg
           cdk deploy --require-approval never --all -O output.json
+          cat output.json
           content=`cat output.json`
           # the following lines are only required for multi line json
           content="${content//'%'/'%25'}"
@@ -145,7 +146,7 @@ jobs:
       - name: Deploy AppSync
         run: |
           cd ./appsync-with-postgraphile
-          cdk deploy -c vpcId=${{ env.VPCID }} --parameters sgId=${{ env.SGID }} --parameters dbProxyArn=${{ env.DBPROXYARN }} --parameters dbProxyName=${{ env.RDSPROXYNAME }} --parameters dbProxyEndpoint=${{ env.ENDPOINT }} --parameters userName=${{ env.USERNAME }} --parameters database=${{ env.DATABASE }} --parameters schemas=${{ env.SCHEMAS }} -O output.json
+          cdk deploy --require-approval never -c vpcId=${{ env.VPCID }} --parameters sgId=${{ env.SGID }} --parameters dbProxyArn=${{ env.DBPROXYARN }} --parameters dbProxyName=${{ env.RDSPROXYNAME }} --parameters dbProxyEndpoint=${{ env.ENDPOINT }} --parameters userName=${{ env.USERNAME }} --parameters database=${{ env.DATABASE }} --parameters schemas=${{ env.SCHEMAS }} -O output.json
           
         env:
           RDSPROXYNAME: ${{ fromJSON(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgRdsStack.rdsProxyName }}
