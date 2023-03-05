@@ -149,14 +149,14 @@ jobs:
           cdk deploy --require-approval never -c vpcId=${{ env.VPCID }} --parameters sgId=${{ env.SGID }} --parameters dbProxyArn=${{ env.DBPROXYARN }} --parameters dbProxyName=${{ env.RDSPROXYNAME }} --parameters dbProxyEndpoint=${{ env.ENDPOINT }} --parameters userName=${{ env.USERNAME }} --parameters database=${{ env.DATABASE }} --parameters schemas=${{ env.SCHEMAS }} -O output.json
           
         env:
-          RDSPROXYNAME: ${{ fromJSON(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgRdsStack.rdsProxyName }}
-          SGID: ${{ fromJSON(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgRdsStack.LambdaSecurityGroupId }}
+          RDSPROXYNAME: ${{ fromJson(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgRdsStack.rdsProxyName }}
+          SGID: ${{ fromJson(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgRdsStack.LambdaSecurityGroupId }}
           USERNAME: 'lambda_runner'
           DATABASE: 'forum_demo_with_appsync'
           SCHEMAS: 'forum_example'
-          VPCID: ${{ fromJSON(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgVpcStack.vpcID }}
-          DBPROXYARN: ${{ fromJSON(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgRdsStack.rdsProxyARN }}
-          ENDPOINT: ${{ fromJSON(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgRdsStack.rdsProxyEndpoint }}
+          VPCID: ${{ fromJson(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgVpcStack.vpcID }}
+          DBPROXYARN: ${{ fromJson(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgRdsStack.rdsProxyARN }}
+          ENDPOINT: ${{ fromJson(needs.vpc-rds-deployment.outputs.DEPLOYMENT).PgRdsStack.rdsProxyEndpoint }}
 
       # - name: Commit repo with output file
       #   env: 
