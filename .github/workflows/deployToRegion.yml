@@ -63,6 +63,8 @@ jobs:
         run: |
           cd ./vpc-with-pg
           npm install
+          cd lib/layers/pg-dbschema-layer/nodejs
+          npm install
           sudo npm install -g aws-cdk
 
       - name: Configure AWS credentials
@@ -129,6 +131,8 @@ jobs:
       - name: Install all dependencies
         run: |
           cd ./appsync-with-postgraphile
+          npm install
+          cd lib/layers/pg-as-datasource-layer/nodejs/ 
           npm install
           sudo npm install -g aws-cdk
 
